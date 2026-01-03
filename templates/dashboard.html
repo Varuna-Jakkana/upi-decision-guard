@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h2>📊 Dashboard</h2>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-number">₹{{ "%.0f"|format(stats.total_spent) }}</div>
+    <div>/ ₹{{ stats.budget }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">{{ stats.decisions_avoided }}</div>
+    <div>Decisions Avoided</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number">₹{{ stats.estimated_saved }}</div>
+    <div>Estimated Saved</div>
+  </div>
+</div>
+
+<h3>Category Breakdown</h3>
+<ul style="list-style: none;">
+  {% for cat in stats.categories %}
+  <li style="background: #f8f9ff; margin: 0.5rem 0; padding: 1rem; border-radius: 8px; border-left: 4px solid #667eea;">
+    {{ cat.name }}: ₹{{ "%.0f"|format(cat.spent) }} / ₹{{ cat.limit }}
+    <span style="float: right; color: #666;">{{ "%.0f"|format((cat.spent/cat.limit)*100) }}%</span>
+  </li>
+  {% endfor %}
+</ul>
+
+<a href="{{ url_for('add_payment') }}" class="btn" style="display: block; text-align: center; margin-top: 2rem;">+ Add New Payment</a>
+{% endblock %}
