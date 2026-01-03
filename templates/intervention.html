@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Pause Moment{% endblock %}
+{% block content %}
+<div style="text-align: center;">
+  <h2>⏸️ Pause Moment</h2>
+  
+  <div class="risk-{{ risk }}">
+    <h3>Risk Level: {{ risk|upper }}</h3>
+    <p>{{ message }}</p>
+  </div>
+
+  <div style="margin: 2rem 0;">
+    <h4>Payment Details</h4>
+    <p><strong>₹{{ "%.0f"|format(amount) }}</strong> - {{ merchant|default('Merchant') }} ({{ category }})</p>
+  </div>
+
+  <form action="{{ url_for('confirm_payment') }}" method="POST" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+    <input type="hidden" name="amount" value="{{ amount }}">
+    <input type="hidden" name="category" value="{{ category }}">
+    <input type="hidden" name="risk" value="{{ risk }}">
+    
+    <button type="submit" name="decision" value="proceed" class="btn">✅ Proceed Anyway</button>
+    <button type="submit" name="decision" value="cancel" class="btn btn-secondary">❌ Cancel & Save Money</button>
+  </form>
+</div>
+{% endblock %}
