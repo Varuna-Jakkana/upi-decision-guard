@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}UPI Decision Guard - Pro Portfolio{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
+
 <body>
   <div class="container">
-<!-- Flash Messages - Place Here -->
+    <!-- Flash Messages - Place Here -->
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show"
+      role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
     {% endwith %}
+
     <!-- Theme Toggle Button - Fixed Position -->
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
       <i class="fas fa-moon" id="themeIcon"></i>
@@ -27,9 +31,9 @@
     <header class="hero glass-card fade-in-up">
       <h1>{% block header %}UPI Decision Guard{% endblock %}</h1>
       <nav>
-  <a href="{{ url_for('dashboard') }}" class="btn">Dashboard</a>
-  <a href="{{ url_for('setup') }}" class="btn">Edit Budget</a>
-</nav>
+        <a href="{{ url_for('dashboard') }}" class="btn">Dashboard</a>
+        <a href="{{ url_for('setup') }}" class="btn">Edit Budget</a>
+      </nav>
     </header>
 
     <main>
@@ -60,5 +64,9 @@
     });
     document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
   </script>
+
+  <!-- Page‑specific scripts (Google Charts etc.) -->
+  {% block extra_scripts %}{% endblock %}
 </body>
+
 </html>

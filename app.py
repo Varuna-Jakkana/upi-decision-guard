@@ -54,9 +54,18 @@ def setup():
 
 @app.route('/dashboard')
 def dashboard():
+    budget = user_config.get('budget', 3000)
     total_spent = user_config.get('total_spent', 0)
-    remaining = user_config.get('remaining', user_config.get('budget', 3000))
-    return render_template('dashboard.html', config=user_config, transactions=transactions, total_spent=total_spent, remaining=remaining)
+    remaining = user_config.get('remaining', budget)
+
+    return render_template(
+        'dashboard.html',
+        config=user_config,
+        transactions=transactions,
+        budget=budget,
+        total_spent=total_spent,
+        remaining=remaining
+    )
 
 
 @app.route('/add_payment', methods=['GET', 'POST'])
