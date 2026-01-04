@@ -1,26 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Pause Moment{% endblock %}
 {% block content %}
-<div style="text-align: center;">
-  <h2>⏸️ Pause Moment</h2>
-  
-  <div class="risk-{{ risk }}">
-    <h3>Risk Level: {{ risk|upper }}</h3>
-    <p>{{ message }}</p>
+<div class="glass-card fade-in-up" style="max-width: 500px; margin: 0 auto;">
+  <h2>AI Risk Analysis</h2>
+  <div class="risk-{{ risk }}" style="padding: 2rem; text-align: center; border-radius: 12px; margin: 1rem 0;">
+    <h3>₹{{ amount }} - {{ category }}</h3>
+    <p style="font-size: 1.2rem;">{{ message }}</p>
   </div>
-
-  <div style="margin: 2rem 0;">
-    <h4>Payment Details</h4>
-    <p><strong>₹{{ "%.0f"|format(amount) }}</strong> - {{ merchant|default('Merchant') }} ({{ category }})</p>
-  </div>
-
-  <form action="{{ url_for('confirm_payment') }}" method="POST" style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+  <form method="POST" action="{{ url_for('confirm_payment') }}">
     <input type="hidden" name="amount" value="{{ amount }}">
     <input type="hidden" name="category" value="{{ category }}">
     <input type="hidden" name="risk" value="{{ risk }}">
-    
-    <button type="submit" name="decision" value="proceed" class="btn">✅ Proceed Anyway</button>
-    <button type="submit" name="decision" value="cancel" class="btn btn-secondary">❌ Cancel & Save Money</button>
+    <button type="submit" name="decision" value="proceed" class="btn" style="background: #ef4444;">Proceed Anyway</button>
+    <button type="submit" name="decision" value="cancel" class="btn" style="background: #10b981;">Cancel (Safe)</button>
   </form>
 </div>
 {% endblock %}

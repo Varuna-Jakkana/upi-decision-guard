@@ -1,104 +1,125 @@
-from flask import Flask, render_template, request, redirect, url_for
-from risk_engine import calculate_risk
-
+from flask import Flask, render_template, request, redirect, url_for, flash
 app = Flask(__name__)
+app.secret_key = 'upi-guard-2026-secret'
 
-# In-memory storage (resets on restart)
 transactions = []
-user_config = {
-    "budget": 8000,
-    "category_limits": {"Food": 3000, "Travel": 2000, "Entertainment": 1000},
-}
-decisions_avoided = 0
+user_config = {"budget": 3000, "total_spent": 0, "remaining": 3000, "budgets": {"Food": {"limit": 0, "spent": 0}, "Travel": {"limit": 0, "spent": 0}, "Entertainment": {"limit": 0, "spent": 0}}}
 
-@app.route("/")
-def dashboard():
-    total_spent = sum(t["amount"] for t in transactions)
-    categories_stats = []
-    for name, limit in user_config["category_limits"].items():
-        spent = sum(t["amount"] for t in transactions if t["category"] == name)
-        categories_stats.append({"name": name, "spent": spent, "limit": limit})
-    
-    estimated_saved = decisions_avoided * 100  # Demo estimate
-    
-    stats = {
-        "budget": user_config["budget"],
-        "total_spent": total_spent,
-        "categories": categories_stats,
-        "decisions_avoided": decisions_avoided,
-        "estimated_saved": estimated_saved,
-    }
-    return render_template("dashboard.html", stats=stats)
+# Load saved config
+try:
+    with open('config.txt', 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            key, val = line.strip().split('=')
+            if key == 'budget':
+                user_config['budget'] = float(val)
+                user_config['remaining'] = float(val)
+            elif key == 'food':
+                user_config['budgets']['Food']['limit'] = float(val)
+            elif key == 'travel':
+                user_config['budgets']['Travel']['limit'] = float(val)
+            elif key == 'ent':
+                user_config['budgets']['Entertainment']['limit'] = float(val)
+except:
+    pass  # First run
 
-@app.route("/login")
-def login():
-    return render_template("login.html")
+@app.route('/')
+def home():
+    return redirect(url_for('setup'))
 
-@app.route("/setup", methods=["GET"])
+@app.route('/setup', methods=['GET', 'POST'])
 def setup():
-    return render_template("setup.html")
+    if request.method == 'POST':
+        try:
+            budget = float(request.form['budget'])
+            food = float(request.form['food_limit'])
+            travel = float(request.form['travel_limit'])
+            ent = float(request.form['entertainment_limit'])
+            total_sum = food + travel + ent
+            
+            if abs(budget - total_sum) < 0.01:
+                user_config.update({
+                    "budget": budget, "total_spent": 0, "remaining": budget,
+                    "budgets": {"Food": {"limit": food, "spent": 0}, "Travel": {"limit": travel, "spent": 0}, "Entertainment": {"limit": ent, "spent": 0}}
+                })
+                with open('config.txt', 'w') as f:
+                    f.write(f"budget={budget}\nfood={food}\ntravel={travel}\nent={ent}\n")
+                flash('✅ Budget saved successfully!', 'success')
+                return redirect(url_for('dashboard'))
+            else:
+                flash(f'🚫 Sum ₹{total_sum:.0f} ≠ Budget ₹{budget:.0f}!', 'error')
+        except ValueError:
+            flash('❌ Invalid numbers entered!', 'error')
+    return render_template('setup.html')
 
-@app.route("/setup", methods=["POST"])
-def save_setup():
-    global user_config
-    user_config["budget"] = float(request.form["budget"])
-    user_config["category_limits"] = {
-        "Food": float(request.form["food_limit"]),
-        "Travel": float(request.form["travel_limit"]),
-        "Entertainment": float(request.form["entertainment_limit"]),
-    }
-    return redirect(url_for("dashboard"))
+@app.route('/dashboard')
+def dashboard():
+    total_spent = user_config.get('total_spent', 0)
+    remaining = user_config.get('remaining', user_config.get('budget', 3000))
+    return render_template('dashboard.html', config=user_config, transactions=transactions, total_spent=total_spent, remaining=remaining)
 
-@app.route("/add_payment", methods=["GET", "POST"])
+
+@app.route('/add_payment', methods=['GET', 'POST'])
 def add_payment():
-    if request.method == "GET":
-        return render_template("add_payment.html")
-    
-    # POST - calculate risk
-    amount = float(request.form["amount"])
-    merchant = request.form["merchant"]
-    category = request.form["category"]
-    time_str = request.form["time"]
-    
-    # Simple stats (ignore date for demo)
-    todays_category_count = sum(1 for t in transactions if t["category"] == category)
-    category_used = sum(t["amount"] for t in transactions if t["category"] == category)
-    category_limit = user_config["category_limits"][category]
-    
-    risk_level, message = calculate_risk(
-        amount, category, time_str,
-        todays_category_count, category_used, category_limit
-    )
-    
-    return render_template(
-        "intervention.html",
-        amount=amount,
-        merchant=merchant,
-        category=category,
-        risk=risk_level,
-        message=message
-    )
+    if request.method == 'POST':
+        return redirect('/confirm_payment')
+    return render_template('add_payment.html')
 
-@app.route("/confirm_payment", methods=["POST"])
+@app.route('/confirm_payment', methods=['POST'])
 def confirm_payment():
-    global decisions_avoided
+    merchant = request.form.get('merchant', 'Unknown')
+    try:
+        amount = float(request.form.get('amount', 0))
+        category = request.form.get('category', 'Other')
+    except ValueError:
+        flash('❌ Invalid amount!', 'error')
+        return redirect('/add_payment')
     
-    amount = float(request.form["amount"])
-    category = request.form["category"]
-    risk = request.form["risk"]
-    decision = request.form["decision"]
+    # AI Risk Analysis (fixed indentation)
+    risk_score = 20
+    if 'unknown' in merchant.lower() or 'test' in merchant.lower():
+        risk_score += 50
+    if amount > user_config['budget'] * 0.2:
+        risk_score += 30
+    if category == 'Entertainment' and amount > 1000:
+        risk_score += 25
+    risk_score = min(risk_score, 95)
     
-    if decision == "proceed":
-        transactions.append({
-            "amount": amount, 
-            "category": category,
-            "merchant": request.form.get("merchant", "Unknown")
-        })
+    # Add transaction (no double update)
+    new_tx = {'merchant': merchant, 'amount': amount, 'category': category, 'risk': risk_score, 'blocked': risk_score > 70}
+    transactions.append(new_tx)
+    
+    # Update totals ONLY if not blocked
+    if not new_tx['blocked']:
+        user_config['total_spent'] += amount
+        user_config['remaining'] -= amount
+        if category in user_config['budgets']:
+            user_config['budgets'][category]['spent'] += amount
+    
+    # Status
+    if risk_score > 70:
+        status = "🚨 BLOCKED - High Risk!"
+        color = "#ef4444"
+    elif risk_score > 40:
+        status = "⚠️ CAUTION - Medium Risk"
+        color = "#f59e0b"
     else:
-        if risk in ("medium", "high"):
-            decisions_avoided += 1
+        status = "✅ APPROVED - Low Risk"
+        color = "#10b981"
     
-    return redirect(url_for("dashboard"))
+    return render_template('risk_result.html', risk_score=risk_score, status=status, color=color, merchant=merchant, amount=amount, category=category)
 
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+@app.route('/force_proceed')
+def force_proceed():
+    merchant = request.args.get('merchant')
+    amount = float(request.args.get('amount'))
+    category = request.args.get('category')
+    
+    # Add transaction ONLY (no double total_spent update - already done in confirm_payment)
+    transactions.append({'merchant': merchant, 'amount': amount, 'category': category, 'risk': 0, 'blocked': False})
+    
+    flash('✅ Forced proceed - Transaction added!', 'success')
+    return redirect('/dashboard')
+
+if __name__ == '__main__':
+    app.run(debug=True)

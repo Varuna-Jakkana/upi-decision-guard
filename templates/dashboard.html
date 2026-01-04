@@ -1,32 +1,58 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
 {% block content %}
-<h2>📊 Dashboard</h2>
+<div class="glass-card fade-in-up" style="max-width: 900px; margin: 0 auto;">
+  
+  <!-- Quick Stats Row -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="glass-card" style="padding: 2rem; text-align: center; background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.2));">
+      <div style="font-size: 2.5rem; color: #10b981; font-weight: bold;">₹{{ "%.0f"|format(total_spent) }}</div>
+      <div style="color: #6b7280;">Total Spent</div>
+    </div>
+    <div class="glass-card" style="padding: 2rem; text-align: center; background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(217,119,6,0.2));">
+      <div style="font-size: 2.5rem; color: #f59e0b; font-weight: bold;">{{ transactions|selectattr('blocked')|list|length }}</div>
+      <div style="color: #6b7280;">Frauds Blocked</div>
+    </div>
+    <div class="glass-card" style="padding: 2rem; text-align: center; background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,64,175,0.2));">
+      <div style="font-size: 2.5rem; color: #3b82f6; font-weight: bold;">₹{{ "%.0f"|format(remaining) }}</div>
+      <div style="color: #6b7280;">Remaining</div>
+    </div>
+  </div>
 
-<div class="stats-grid">
-  <div class="stat-card">
-    <div class="stat-number">₹{{ "%.0f"|format(stats.total_spent) }}</div>
-    <div>/ ₹{{ stats.budget }}</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-number">{{ stats.decisions_avoided }}</div>
-    <div>Decisions Avoided</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-number">₹{{ stats.estimated_saved }}</div>
-    <div>Estimated Saved</div>
+  <!-- Category Breakdown - FIXED with Spent + % -->
+<div class="glass-card" style="padding: 2.5rem;">
+  <h3 style="margin-bottom: 1.5rem;">📊 Category Budgets</h3>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    
+    <!-- Food - Shows Spent / Limit + % -->
+    <div style="padding: 1.5rem; background: rgba(16,185,129,0.1); border-radius: 12px; border-left: 4px solid #10b981;">
+      <div style="font-size: 1.8rem; font-weight: bold;">Food & Dining</div>
+      <div style="font-size: 2.5rem; color: #10b981; margin: 0.5rem 0;">₹{{ "%.0f"|format(config.budgets.Food.spent|default(0)) }} / ₹{{ "%.0f"|format(config.budgets.Food.limit|default(0)) }}</div>
+      <div style="color: #6b7280;">{{ "%.0f"|format((config.budgets.Food.spent|default(0)/config.budgets.Food.limit|default(1))*100) }}% used</div>
+    </div>
+    
+    <!-- Travel -->
+    <div style="padding: 1.5rem; background: rgba(245,158,11,0.1); border-radius: 12px; border-left: 4px solid #f59e0b;">
+      <div style="font-size: 1.8rem; font-weight: bold;">Travel & Transport</div>
+      <div style="font-size: 2.5rem; color: #f59e0b; margin: 0.5rem 0;">₹{{ "%.0f"|format(config.budgets.Travel.spent|default(0)) }} / ₹{{ "%.0f"|format(config.budgets.Travel.limit|default(0)) }}</div>
+      <div style="color: #6b7280;">{{ "%.0f"|format((config.budgets.Travel.spent|default(0)/config.budgets.Travel.limit|default(1))*100) }}% used</div>
+    </div>
+    
+    <!-- Entertainment -->
+    <div style="padding: 1.5rem; background: rgba(59,130,246,0.1); border-radius: 12px; border-left: 4px solid #3b82f6;">
+      <div style="font-size: 1.8rem; font-weight: bold;">Entertainment</div>
+      <div style="font-size: 2.5rem; color: #3b82f6; margin: 0.5rem 0;">₹{{ "%.0f"|format(config.budgets.Entertainment.spent|default(0)) }} / ₹{{ "%.0f"|format(config.budgets.Entertainment.limit|default(0)) }}</div>
+      <div style="color: #6b7280;">{{ "%.0f"|format((config.budgets.Entertainment.spent|default(0)/config.budgets.Entertainment.limit|default(1))*100) }}% used</div>
+    </div>
+    
   </div>
 </div>
 
-<h3>Category Breakdown</h3>
-<ul style="list-style: none;">
-  {% for cat in stats.categories %}
-  <li style="background: #f8f9ff; margin: 0.5rem 0; padding: 1rem; border-radius: 8px; border-left: 4px solid #667eea;">
-    {{ cat.name }}: ₹{{ "%.0f"|format(cat.spent) }} / ₹{{ cat.limit }}
-    <span style="float: right; color: #666;">{{ "%.0f"|format((cat.spent/cat.limit)*100) }}%</span>
-  </li>
-  {% endfor %}
-</ul>
-
-<a href="{{ url_for('add_payment') }}" class="btn" style="display: block; text-align: center; margin-top: 2rem;">+ Add New Payment</a>
+    
+    <!-- Action Buttons -->
+    <div style="text-align: center;">
+      <a href="{{ url_for('setup') }}" class="btn" style="background: linear-gradient(135deg, #1e40af, #3b82f6); margin-right: 1rem;">✏️ Edit Categories</a>
+      <a href="{{ url_for('add_payment') }}" class="btn" style="background: linear-gradient(135deg, #10b981, #059669);">➕ Add UPI Payment</a>
+    </div>
+  </div>
+</div>
 {% endblock %}

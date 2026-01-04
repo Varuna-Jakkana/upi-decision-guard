@@ -1,27 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}UPI Decision Guard{% endblock %}</title>
+  <title>{% block title %}UPI Decision Guard - Pro Portfolio{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-  <header class="header">
-    <h1>🛡️ UPI Decision Guard</h1>
-    <nav>
-      <a href="{{ url_for('dashboard') }}">Dashboard</a>
-      <a href="{{ url_for('setup') }}">Setup</a>
-      <a href="{{ url_for('add_payment') }}">+ Add Payment</a>
-    </nav>
-  </header>
+  <div class="container">
+<!-- Flash Messages - Place Here -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <!-- Theme Toggle Button - Fixed Position -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+      <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
 
-  <main class="main-content">
-    {% block content %}{% endblock %}
-  </main>
+    <header class="hero glass-card fade-in-up">
+      <h1>{% block header %}UPI Decision Guard{% endblock %}</h1>
+      <nav>
+  <a href="{{ url_for('dashboard') }}" class="btn">Dashboard</a>
+  <a href="{{ url_for('setup') }}" class="btn">Edit Budget</a>
+</nav>
+    </header>
 
-  <footer class="footer">
-    <p>Team: Varuna · Meghana · Kala · Monali | CSE-AI&ML Portfolio Project</p>
-  </footer>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="glass-card">
+      <p>&copy; 2026 Mekala Team | CI/CD Portfolio | UPI Guard Hackathon Winner 🚀</p>
+    </footer>
+  </div>
+
+  <!-- Theme Toggle Script -->
+  <script>
+    const toggleTheme = () => {
+      const body = document.body;
+      const icon = document.getElementById('themeIcon');
+      body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+      icon.className = body.dataset.theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    };
+
+    // Intersection Observer for Scroll Animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate');
+        }
+      });
+    });
+    document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+  </script>
 </body>
 </html>

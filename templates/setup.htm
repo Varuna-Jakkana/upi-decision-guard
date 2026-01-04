@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="glass-card fade-in-up" style="max-width: 500px; margin: 0 auto;">
+  <h2>Set Budgets</h2>
+  {% if error %}
+  <div style="background: #fee2e2; color: #dc2626; padding: 15px; border-radius: 8px; margin: 10px 0; border: 2px solid #ef4444;">
+    <strong>🚫 {{ error }}</strong>
+  </div>
+  {% endif %}
+  <form method="POST" onsubmit="return checkBudget();">
+    <label>Total Monthly Budget (₹): <input type="number" id="budget" name="budget" value="{{ request.form.budget or '8000' }}" required style="width: 200px;"><br><br>
+    <label>Food & Dining (₹): <input type="number" id="food" name="food_limit" value="{{ request.form.food_limit or '3000' }}" required style="width: 200px;"><br><br>
+    <label>Travel & Transport (₹): <input type="number" id="travel" name="travel_limit" value="{{ request.form.travel_limit or '2000' }}" required style="width: 200px;"><br><br>
+    <label>Entertainment (₹): <input type="number" id="ent" name="entertainment_limit" value="{{ request.form.entertainment_limit or '1000' }}" required style="width: 200px;"><br><br>
+    <button type="submit" class="btn" style="background: #ef4444; color: white;">Save & Continue</button>
+  </form>
+</div>
+
+<script>
+function checkBudget() {
+    var budget = parseFloat(document.getElementById('budget').value) || 0;
+    var food = parseFloat(document.getElementById('food').value) || 0;
+    var travel = parseFloat(document.getElementById('travel').value) || 0;
+    var ent = parseFloat(document.getElementById('ent').value) || 0;
+    var sum = food + travel + ent;
+    
+    if (Math.abs(sum - budget) > 0.01) {
+        alert('🚫 BUDGET MISMATCH!\n\nFood+Travel+Ent = ₹' + sum.toFixed(0) + '\nTotal Budget = ₹' + budget.toFixed(0) + '\n\nMake EXACTLY equal!');
+        return false;  // BLOCKS SUBMIT
+    }
+    return true;  // ALLOWS SUBMIT
+}
+</script>
+{% endblock %}

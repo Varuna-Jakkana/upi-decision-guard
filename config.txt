@@ -1,0 +1,4 @@
+budget=1000.0
+food=500.0
+travel=200.0
+ent=300.0
