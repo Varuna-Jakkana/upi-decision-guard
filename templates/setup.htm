@@ -1,7 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+  /* Theme-aware label colors */
+  [data-theme="light"] .setup-label {
+    color: #1f2937;
+  }
+
+  [data-theme="dark"] .setup-label {
+    color: #e5e7eb;
+  }
+
+  [data-theme="light"] .setup-heading {
+    color: #111827;
+  }
+
+  [data-theme="dark"] .setup-heading {
+    color: #f3f4f6;
+  }
+</style>
+
 <div class="glass-card fade-in-up" style="max-width: 500px; margin: 0 auto;">
-  <h2 style="color: inherit;">🏦 Setup Your Monthly Budget</h2>
+  <h2 class="setup-heading">🏦 Setup Your Monthly Budget</h2>
   {% if error %}
   <div
     style="background: #fee2e2; color: #dc2626; padding: 15px; border-radius: 8px; margin: 10px 0; border: 2px solid #ef4444;">
@@ -9,35 +28,31 @@
   </div>
   {% endif %}
   <form method="POST" onsubmit="return checkBudget();">
-    <label style="color: inherit; display: block; margin-bottom: 0.5rem;">
+    <label class="setup-label" style="display: block; margin-bottom: 1rem;">
       Total Monthly Budget (₹):
       <input type="number" id="budget" name="budget" value="{{ request.form.budget or '8000' }}" required
         style="width: 100%; max-width: 300px; margin-top: 0.25rem;">
     </label>
-    <br>
 
-    <h3 style="color: inherit; margin-top: 1.5rem; margin-bottom: 0.5rem;">Category Limits</h3>
+    <h3 class="setup-heading" style="margin-top: 1.5rem; margin-bottom: 1rem;">Category Limits</h3>
 
-    <label style="color: inherit; display: block; margin-bottom: 0.5rem;">
+    <label class="setup-label" style="display: block; margin-bottom: 1rem;">
       Food & Dining (₹):
       <input type="number" id="food" name="food_limit" value="{{ request.form.food_limit or '3000' }}" required
         style="width: 100%; max-width: 300px; margin-top: 0.25rem;">
     </label>
-    <br>
 
-    <label style="color: inherit; display: block; margin-bottom: 0.5rem;">
+    <label class="setup-label" style="display: block; margin-bottom: 1rem;">
       Travel & Transport (₹):
       <input type="number" id="travel" name="travel_limit" value="{{ request.form.travel_limit or '2000' }}" required
         style="width: 100%; max-width: 300px; margin-top: 0.25rem;">
     </label>
-    <br>
 
-    <label style="color: inherit; display: block; margin-bottom: 0.5rem;">
+    <label class="setup-label" style="display: block; margin-bottom: 1rem;">
       Entertainment (₹):
       <input type="number" id="ent" name="entertainment_limit" value="{{ request.form.entertainment_limit or '1000' }}"
         required style="width: 100%; max-width: 300px; margin-top: 0.25rem;">
     </label>
-    <br>
 
     <button type="submit" class="btn"
       style="background: linear-gradient(135deg, #10b981, #059669); color: white; margin-top: 1rem;">Save &
@@ -55,9 +70,9 @@
 
     if (Math.abs(sum - budget) > 0.01) {
       alert('🚫 BUDGET MISMATCH!\n\nFood+Travel+Ent = ₹' + sum.toFixed(0) + '\nTotal Budget = ₹' + budget.toFixed(0) + '\n\nMake EXACTLY equal!');
-      return false;  // BLOCKS SUBMIT
+      return false;
     }
-    return true;  // ALLOWS SUBMIT
+    return true;
   }
 </script>
 {% endblock %}
