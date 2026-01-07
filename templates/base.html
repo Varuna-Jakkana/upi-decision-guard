@@ -46,11 +46,25 @@
 
   <!-- Theme Toggle Script -->
   <script>
+    // Load saved theme on page load
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.dataset.theme = savedTheme;
+    const icon = document.getElementById('themeIcon');
+    if (icon) {
+      icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+
     const toggleTheme = () => {
       const body = document.body;
       const icon = document.getElementById('themeIcon');
-      body.dataset.theme = body.dataset.theme === 'dark' ? 'light' : 'dark';
-      icon.className = body.dataset.theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+      const newTheme = body.dataset.theme === 'dark' ? 'light' : 'dark';
+
+      // Update theme
+      body.dataset.theme = newTheme;
+      icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+      // Save to localStorage
+      localStorage.setItem('theme', newTheme);
     };
 
     // Intersection Observer for Scroll Animations
@@ -64,8 +78,10 @@
     document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
   </script>
 
+
   <!-- Page‑specific scripts (Google Charts etc.) -->
   {% block extra_scripts %}{% endblock %}
+
 </body>
 
 </html>
