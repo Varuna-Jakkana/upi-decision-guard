@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 app = Flask(__name__)
 app.secret_key = 'upi-guard-2026-secret'
 
+
 transactions = []
 user_config = {"budget": 3000, "total_spent": 0, "remaining": 3000, "budgets": {"Food": {"limit": 0, "spent": 0}, "Travel": {"limit": 0, "spent": 0}, "Entertainment": {"limit": 0, "spent": 0}}}
+
 
 # Load saved config
 try:
@@ -23,9 +25,11 @@ try:
 except:
     pass  # First run
 
+
 @app.route('/')
 def home():
     return redirect(url_for('setup'))
+
 
 @app.route('/setup', methods=['GET', 'POST'])
 def setup():
@@ -52,6 +56,7 @@ def setup():
             flash('❌ Invalid numbers entered!', 'error')
     return render_template('setup.html')
 
+
 @app.route('/dashboard')
 def dashboard():
     budget = user_config.get('budget', 3000)
@@ -74,6 +79,7 @@ def add_payment():
         return redirect('/confirm_payment')
     return render_template('add_payment.html')
 
+
 @app.route('/confirm_payment', methods=['POST'])
 def confirm_payment():
     merchant = request.form.get('merchant', 'Unknown')
@@ -84,7 +90,14 @@ def confirm_payment():
         flash('❌ Invalid amount!', 'error')
         return redirect('/add_payment')
     
-    # AI Risk Analysis (fixed indentation)
+    # Store payment details in session temporarily (NOT added to transactions yet)
+    session['pending_payment'] = {
+        'merchant': merchant,
+        'amount': amount,
+        'category': category
+    }
+    
+    # AI Risk Analysis
     risk_score = 20
     if 'unknown' in merchant.lower() or 'test' in merchant.lower():
         risk_score += 50
@@ -94,20 +107,12 @@ def confirm_payment():
         risk_score += 25
     risk_score = min(risk_score, 95)
     
-    # Add transaction (no double update)
-    new_tx = {'merchant': merchant, 'amount': amount, 'category': category, 'risk': risk_score, 'blocked': risk_score > 70}
-    transactions.append(new_tx)
-    
-    # Update totals ONLY if not blocked
-    if not new_tx['blocked']:
-        user_config['total_spent'] += amount
-        user_config['remaining'] -= amount
-        if category in user_config['budgets']:
-            user_config['budgets'][category]['spent'] += amount
+    # Determine if blocked
+    blocked = risk_score > 70
     
     # Status
     if risk_score > 70:
-        status = "🚨 BLOCKED - High Risk!"
+        status = "🚨 HIGH RISK - Review Carefully!"
         color = "#ef4444"
     elif risk_score > 40:
         status = "⚠️ CAUTION - Medium Risk"
@@ -116,19 +121,58 @@ def confirm_payment():
         status = "✅ APPROVED - Low Risk"
         color = "#10b981"
     
-    return render_template('risk_result.html', risk_score=risk_score, status=status, color=color, merchant=merchant, amount=amount, category=category)
+    return render_template('risk_result.html', risk_score=risk_score, status=status, color=color, merchant=merchant, amount=amount, category=category, blocked=blocked)
 
+
+@app.route('/approve_payment')
+def approve_payment():
+    """User approved the payment (low/medium risk or forced proceed on high risk)"""
+    pending = session.get('pending_payment')
+    
+    if not pending:
+        flash('❌ No pending payment to approve!', 'error')
+        return redirect('/dashboard')
+    
+    merchant = pending['merchant']
+    amount = pending['amount']
+    category = pending['category']
+    
+    # NOW add the transaction
+    new_tx = {
+        'merchant': merchant,
+        'amount': amount,
+        'category': category,
+        'risk': 0,  # Risk already shown, now approved
+        'blocked': False
+    }
+    transactions.append(new_tx)
+    
+    # Update totals
+    user_config['total_spent'] += amount
+    user_config['remaining'] -= amount
+    if category in user_config['budgets']:
+        user_config['budgets'][category]['spent'] += amount
+    
+    # Clear pending payment
+    session.pop('pending_payment', None)
+    
+    flash('✅ Payment approved and added!', 'success')
+    return redirect('/dashboard')
+
+
+@app.route('/cancel_payment')
+def cancel_payment():
+    """User canceled the payment"""
+    session.pop('pending_payment', None)
+    flash('❌ Payment canceled!', 'error')
+    return redirect('/dashboard')
+
+
+# Keeping force_proceed for backward compatibility (redirect to approve)
 @app.route('/force_proceed')
 def force_proceed():
-    merchant = request.args.get('merchant')
-    amount = float(request.args.get('amount'))
-    category = request.args.get('category')
-    
-    # Add transaction ONLY (no double total_spent update - already done in confirm_payment)
-    transactions.append({'merchant': merchant, 'amount': amount, 'category': category, 'risk': 0, 'blocked': False})
-    
-    flash('✅ Forced proceed - Transaction added!', 'success')
-    return redirect('/dashboard')
+    return redirect('/approve_payment')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
