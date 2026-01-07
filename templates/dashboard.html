@@ -12,7 +12,7 @@
       ['Label', 'Amount'],
       ['Spent', {{ total_spent|default (0) }}],
   ['Remaining', {{ remaining|default (0) }}]
-      ]);
+    ]);
 
   var options = {
     title: 'Budget vs Spent',
@@ -25,7 +25,7 @@
     document.getElementById('budgetChart')
   );
   chart.draw(data, options);
-    }
+  }
 </script>
 {% endblock %}
 
@@ -84,7 +84,11 @@
           ₹{{ "%.0f"|format(config.budgets.Food.limit|default(0)) }}
         </div>
         <div style="color: #6b7280;">
-          {{ "%.0f"|format((config.budgets.Food.spent|default(0) / config.budgets.Food.limit|default(1)) * 100) }}% used
+          {% if config.budgets.Food.limit > 0 %}
+          {{ "%.0f"|format((config.budgets.Food.spent / config.budgets.Food.limit) * 100) }}% used
+          {% else %}
+          0% used
+          {% endif %}
         </div>
       </div>
 
@@ -98,8 +102,11 @@
           ₹{{ "%.0f"|format(config.budgets.Shopping.limit|default(0)) }}
         </div>
         <div style="color: #6b7280;">
-          {{ "%.0f"|format((config.budgets.Shopping.spent|default(0) / config.budgets.Shopping.limit|default(1)) * 100)
-          }}% used
+          {% if config.budgets.Shopping.limit > 0 %}
+          {{ "%.0f"|format((config.budgets.Shopping.spent / config.budgets.Shopping.limit) * 100) }}% used
+          {% else %}
+          0% used
+          {% endif %}
         </div>
       </div>
 
@@ -113,8 +120,11 @@
           ₹{{ "%.0f"|format(config.budgets.Entertainment.limit|default(0)) }}
         </div>
         <div style="color: #6b7280;">
-          {{ "%.0f"|format((config.budgets.Entertainment.spent|default(0) /
-          config.budgets.Entertainment.limit|default(1)) * 100) }}% used
+          {% if config.budgets.Entertainment.limit > 0 %}
+          {{ "%.0f"|format((config.budgets.Entertainment.spent / config.budgets.Entertainment.limit) * 100) }}% used
+          {% else %}
+          0% used
+          {% endif %}
         </div>
       </div>
 
@@ -128,8 +138,11 @@
           ₹{{ "%.0f"|format(config.budgets.Bills.limit|default(0)) }}
         </div>
         <div style="color: #6b7280;">
-          {{ "%.0f"|format((config.budgets.Bills.spent|default(0) / config.budgets.Bills.limit|default(1)) * 100) }}%
-          used
+          {% if config.budgets.Bills.limit > 0 %}
+          {{ "%.0f"|format((config.budgets.Bills.spent / config.budgets.Bills.limit) * 100) }}% used
+          {% else %}
+          0% used
+          {% endif %}
         </div>
       </div>
 
@@ -143,8 +156,11 @@
           ₹{{ "%.0f"|format(config.budgets.Health.limit|default(0)) }}
         </div>
         <div style="color: #6b7280;">
-          {{ "%.0f"|format((config.budgets.Health.spent|default(0) / config.budgets.Health.limit|default(1)) * 100) }}%
-          used
+          {% if config.budgets.Health.limit > 0 %}
+          {{ "%.0f"|format((config.budgets.Health.spent / config.budgets.Health.limit) * 100) }}% used
+          {% else %}
+          0% used
+          {% endif %}
         </div>
       </div>
 
@@ -158,8 +174,11 @@
           ₹{{ "%.0f"|format(config.budgets.Savings.limit|default(0)) }}
         </div>
         <div style="color: #6b7280;">
-          {{ "%.0f"|format((config.budgets.Savings.spent|default(0) / config.budgets.Savings.limit|default(1)) * 100)
-          }}% used
+          {% if config.budgets.Savings.limit > 0 %}
+          {{ "%.0f"|format((config.budgets.Savings.spent / config.budgets.Savings.limit) * 100) }}% used
+          {% else %}
+          0% used
+          {% endif %}
         </div>
       </div>
 
@@ -173,8 +192,11 @@
           ₹{{ "%.0f"|format(config.budgets.Others.limit|default(0)) }}
         </div>
         <div style="color: #6b7280;">
-          {{ "%.0f"|format((config.budgets.Others.spent|default(0) / config.budgets.Others.limit|default(1)) * 100) }}%
-          used
+          {% if config.budgets.Others.limit > 0 %}
+          {{ "%.0f"|format((config.budgets.Others.spent / config.budgets.Others.limit) * 100) }}% used
+          {% else %}
+          0% used
+          {% endif %}
         </div>
       </div>
 
