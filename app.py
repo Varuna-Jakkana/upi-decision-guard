@@ -20,28 +20,33 @@ user_config = {
 }
 
 
-# Load saved config
+# Load saved config (SAFE VERSION)
 try:
     with open('config.txt', 'r') as f:
         lines = f.readlines()
         for line in lines:
-            key, val = line.strip().split('=')
-            if key == 'budget':
-                user_config['budget'] = float(val)
-                user_config['remaining'] = float(val)
-            elif key in ['food', 'shopping', 'entertainment', 'bills', 'health', 'savings', 'others']:
-                category_map = {
-                    'food': 'Food',
-                    'shopping': 'Shopping',
-                    'entertainment': 'Entertainment',
-                    'bills': 'Bills',
-                    'health': 'Health',
-                    'savings': 'Savings',
-                    'others': 'Others'
-                }
-                user_config['budgets'][category_map[key]]['limit'] = float(val)
-except:
-    pass  # First run
+            if '=' in line:
+                key, val = line.strip().split('=')
+                if key == 'budget':
+                    user_config['budget'] = float(val)
+                    user_config['remaining'] = float(val)
+                elif key == 'food':
+                    user_config['budgets']['Food']['limit'] = float(val)
+                elif key == 'shopping':
+                    user_config['budgets']['Shopping']['limit'] = float(val)
+                elif key == 'entertainment':
+                    user_config['budgets']['Entertainment']['limit'] = float(val)
+                elif key == 'bills':
+                    user_config['budgets']['Bills']['limit'] = float(val)
+                elif key == 'health':
+                    user_config['budgets']['Health']['limit'] = float(val)
+                elif key == 'savings':
+                    user_config['budgets']['Savings']['limit'] = float(val)
+                elif key == 'others':
+                    user_config['budgets']['Others']['limit'] = float(val)
+except Exception as e:
+    print(f"Config load error (using defaults): {e}")
+    pass
 
 
 @app.route('/')
@@ -109,57 +114,53 @@ def dashboard():
 @app.route('/add_payment', methods=['GET', 'POST'])
 def add_payment():
     if request.method == 'POST':
-        return redirect('/confirm_payment')
+        merchant = request.form.get('merchant', 'Unknown')
+        try:
+            amount = float(request.form.get('amount', 0))
+            category = request.form.get('category', 'Others')
+        except ValueError:
+            flash('❌ Invalid amount!', 'error')
+            return redirect('/add_payment')
+        
+        # Store payment details in session
+        session['pending_payment'] = {
+            'merchant': merchant,
+            'amount': amount,
+            'category': category
+        }
+        
+        # AI Risk Analysis
+        risk_score = 20
+        if 'unknown' in merchant.lower() or 'test' in merchant.lower():
+            risk_score += 50
+        if amount > user_config['budget'] * 0.2:
+            risk_score += 30
+        if category == 'Entertainment' and amount > 1000:
+            risk_score += 25
+        risk_score = min(risk_score, 95)
+        
+        # Determine if blocked
+        blocked = risk_score > 70
+        
+        # Status
+        if risk_score > 70:
+            status = "🚨 HIGH RISK - Review Carefully!"
+            color = "#ef4444"
+        elif risk_score > 40:
+            status = "⚠️ CAUTION - Medium Risk"
+            color = "#f59e0b"
+        else:
+            status = "✅ APPROVED - Low Risk"
+            color = "#10b981"
+        
+        return render_template('risk_result.html', risk_score=risk_score, status=status, color=color, merchant=merchant, amount=amount, category=category, blocked=blocked)
+    
     return render_template('add_payment.html')
-
-
-@app.route('/confirm_payment', methods=['POST'])
-def confirm_payment():
-    merchant = request.form.get('merchant', 'Unknown')
-    try:
-        amount = float(request.form.get('amount', 0))
-        category = request.form.get('category', 'Others')
-    except ValueError:
-        flash('❌ Invalid amount!', 'error')
-        return redirect('/add_payment')
-    
-    # Store payment details in session temporarily (NOT added to transactions yet)
-    session['pending_payment'] = {
-        'merchant': merchant,
-        'amount': amount,
-        'category': category
-    }
-    
-    # AI Risk Analysis
-    risk_score = 20
-    if 'unknown' in merchant.lower() or 'test' in merchant.lower():
-        risk_score += 50
-    if amount > user_config['budget'] * 0.2:
-        risk_score += 30
-    if category == 'Entertainment' and amount > 1000:
-        risk_score += 25
-    risk_score = min(risk_score, 95)
-    
-    # Determine if blocked
-    blocked = risk_score > 70
-    
-    # Status
-    if risk_score > 70:
-        status = "🚨 HIGH RISK - Review Carefully!"
-        color = "#ef4444"
-    elif risk_score > 40:
-        status = "⚠️ CAUTION - Medium Risk"
-        color = "#f59e0b"
-    else:
-        status = "✅ APPROVED - Low Risk"
-        color = "#10b981"
-    
-    return render_template('risk_result.html', risk_score=risk_score, status=status, color=color, merchant=merchant, amount=amount, category=category, blocked=blocked)
 
 
 @app.route('/approve_payment')
 def approve_payment():
-    """User approved the payment (low/medium risk or forced proceed on high risk)"""
+    """User approved the payment"""
     pending = session.get('pending_payment')
     
     if not pending:
@@ -199,12 +200,6 @@ def cancel_payment():
     session.pop('pending_payment', None)
     flash('❌ Payment canceled!', 'error')
     return redirect('/dashboard')
-
-
-# Keeping force_proceed for backward compatibility (redirect to approve)
-@app.route('/force_proceed')
-def force_proceed():
-    return redirect('/approve_payment')
 
 
 if __name__ == '__main__':
