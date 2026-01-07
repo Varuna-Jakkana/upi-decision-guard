@@ -1,33 +1,56 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="glass-card fade-in-up" style="max-width: 480px; margin: 4rem auto;">
-  <div style="text-align: center; margin-bottom: 2rem;">
-    <i class="fas fa-credit-card fa-3x" style="color: var(--primary); margin-bottom: 1rem;"></i>
-    <h2 style="color: var(--primary);">Secure UPI Payment</h2>
-    <p style="color: #64748b; font-size: 1.1rem;">AI Risk Analysis Before Confirm</p>
-  </div>
+<style>
+  body[data-theme="dark"] label,
+  body[data-theme="dark"] h2 {
+    color: #e5e7eb !important;
+  }
 
-  <form method="POST" action="/confirm_payment" style="display: grid; gap: 1.5rem;">
+  body[data-theme="light"] label,
+  body[data-theme="light"] h2 {
+    color: #1f2937 !important;
+  }
+</style>
 
+<div class="glass-card fade-in-up" style="max-width: 500px; margin: 0 auto;">
+  <h2>➕ Add UPI Payment</h2>
 
-    <label>Amount (₹)
-      <input type="number" name="amount" step="0.01" min="1" placeholder="450" required style="font-size: 1.1rem;">
+  <form method="POST">
+    <label style="display: block; margin-bottom: 1rem; font-weight: 500;">
+      Merchant Name:
+      <input type="text" name="merchant" placeholder="Swiggy, Amazon, etc." required
+        style="width: 100%; margin-top: 0.5rem; padding: 0.75rem; border-radius: 8px; border: 1px solid #ccc;">
     </label>
-    <label>Merchant
-      <input type="text" name="merchant" placeholder="Swiggy / Uber / Amazon" required>
+
+    <label style="display: block; margin-bottom: 1rem; font-weight: 500;">
+      Amount (₹):
+      <input type="number" name="amount" placeholder="500" required
+        style="width: 100%; margin-top: 0.5rem; padding: 0.75rem; border-radius: 8px; border: 1px solid #ccc;">
     </label>
-    <label>Category
-      <select name="category" required style="font-size: 1.1rem;">
-        <option value="">Select Category</option>
+
+    <label style="display: block; margin-bottom: 1.5rem; font-weight: 500;">
+      Category:
+      <select name="category" required
+        style="width: 100%; margin-top: 0.5rem; padding: 0.75rem; border-radius: 8px; border: 1px solid #ccc;">
+        <option value="">-- Select Category --</option>
         <option value="Food">🍔 Food</option>
-        <option value="Travel">🚗 Travel</option>
+        <option value="Shopping">🛒 Shopping</option>
         <option value="Entertainment">🎬 Entertainment</option>
+        <option value="Bills">💡 Bills & Utilities</option>
+        <option value="Health">⚕️ Health & Medical</option>
+        <option value="Savings">💰 Savings</option>
+        <option value="Others">📦 Others</option>
       </select>
     </label>
-    <label>Time
-      <input type="time" name="time" required>
-    </label>
-    <button type="submit" class="btn" style="font-size: 1.1rem; padding: 16px;">Analyze Risk →</button>
+
+    <button type="submit" class="btn"
+      style="background: linear-gradient(135deg, #3b82f6, #1e40af); color: white; padding: 0.75rem 1.5rem; width: 100%;">
+      Check Risk & Proceed
+    </button>
   </form>
+
+  <div style="text-align: center; margin-top: 1.5rem;">
+    <a href="/dashboard" style="color: #6b7280; text-decoration: none;">← Back to Dashboard</a>
+  </div>
 </div>
 {% endblock %}

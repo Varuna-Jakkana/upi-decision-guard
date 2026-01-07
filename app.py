@@ -4,7 +4,20 @@ app.secret_key = 'upi-guard-2026-secret'
 
 
 transactions = []
-user_config = {"budget": 3000, "total_spent": 0, "remaining": 3000, "budgets": {"Food": {"limit": 0, "spent": 0}, "Travel": {"limit": 0, "spent": 0}, "Entertainment": {"limit": 0, "spent": 0}}}
+user_config = {
+    "budget": 10000, 
+    "total_spent": 0, 
+    "remaining": 10000, 
+    "budgets": {
+        "Food": {"limit": 0, "spent": 0},
+        "Shopping": {"limit": 0, "spent": 0},
+        "Entertainment": {"limit": 0, "spent": 0},
+        "Bills": {"limit": 0, "spent": 0},
+        "Health": {"limit": 0, "spent": 0},
+        "Savings": {"limit": 0, "spent": 0},
+        "Others": {"limit": 0, "spent": 0}
+    }
+}
 
 
 # Load saved config
@@ -16,12 +29,17 @@ try:
             if key == 'budget':
                 user_config['budget'] = float(val)
                 user_config['remaining'] = float(val)
-            elif key == 'food':
-                user_config['budgets']['Food']['limit'] = float(val)
-            elif key == 'travel':
-                user_config['budgets']['Travel']['limit'] = float(val)
-            elif key == 'ent':
-                user_config['budgets']['Entertainment']['limit'] = float(val)
+            elif key in ['food', 'shopping', 'entertainment', 'bills', 'health', 'savings', 'others']:
+                category_map = {
+                    'food': 'Food',
+                    'shopping': 'Shopping',
+                    'entertainment': 'Entertainment',
+                    'bills': 'Bills',
+                    'health': 'Health',
+                    'savings': 'Savings',
+                    'others': 'Others'
+                }
+                user_config['budgets'][category_map[key]]['limit'] = float(val)
 except:
     pass  # First run
 
@@ -37,17 +55,32 @@ def setup():
         try:
             budget = float(request.form['budget'])
             food = float(request.form['food_limit'])
-            travel = float(request.form['travel_limit'])
-            ent = float(request.form['entertainment_limit'])
-            total_sum = food + travel + ent
+            shopping = float(request.form['shopping_limit'])
+            entertainment = float(request.form['entertainment_limit'])
+            bills = float(request.form['bills_limit'])
+            health = float(request.form['health_limit'])
+            savings = float(request.form['savings_limit'])
+            others = float(request.form['others_limit'])
+            
+            total_sum = food + shopping + entertainment + bills + health + savings + others
             
             if abs(budget - total_sum) < 0.01:
                 user_config.update({
-                    "budget": budget, "total_spent": 0, "remaining": budget,
-                    "budgets": {"Food": {"limit": food, "spent": 0}, "Travel": {"limit": travel, "spent": 0}, "Entertainment": {"limit": ent, "spent": 0}}
+                    "budget": budget, 
+                    "total_spent": 0, 
+                    "remaining": budget,
+                    "budgets": {
+                        "Food": {"limit": food, "spent": 0},
+                        "Shopping": {"limit": shopping, "spent": 0},
+                        "Entertainment": {"limit": entertainment, "spent": 0},
+                        "Bills": {"limit": bills, "spent": 0},
+                        "Health": {"limit": health, "spent": 0},
+                        "Savings": {"limit": savings, "spent": 0},
+                        "Others": {"limit": others, "spent": 0}
+                    }
                 })
                 with open('config.txt', 'w') as f:
-                    f.write(f"budget={budget}\nfood={food}\ntravel={travel}\nent={ent}\n")
+                    f.write(f"budget={budget}\nfood={food}\nshopping={shopping}\nentertainment={entertainment}\nbills={bills}\nhealth={health}\nsavings={savings}\nothers={others}\n")
                 flash('✅ Budget saved successfully!', 'success')
                 return redirect(url_for('dashboard'))
             else:
@@ -59,7 +92,7 @@ def setup():
 
 @app.route('/dashboard')
 def dashboard():
-    budget = user_config.get('budget', 3000)
+    budget = user_config.get('budget', 10000)
     total_spent = user_config.get('total_spent', 0)
     remaining = user_config.get('remaining', budget)
 
@@ -85,7 +118,7 @@ def confirm_payment():
     merchant = request.form.get('merchant', 'Unknown')
     try:
         amount = float(request.form.get('amount', 0))
-        category = request.form.get('category', 'Other')
+        category = request.form.get('category', 'Others')
     except ValueError:
         flash('❌ Invalid amount!', 'error')
         return redirect('/add_payment')
@@ -142,7 +175,7 @@ def approve_payment():
         'merchant': merchant,
         'amount': amount,
         'category': category,
-        'risk': 0,  # Risk already shown, now approved
+        'risk': 0,
         'blocked': False
     }
     transactions.append(new_tx)
