@@ -1,4 +1,4 @@
-budget=1000.0
-food=500.0
-travel=200.0
-ent=300.0
+budget=10000.0
+food=6000.0
+travel=2000.0
+ent=2000.0
