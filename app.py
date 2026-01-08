@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
+from datetime import datetime
+
 app = Flask(__name__)
 app.secret_key = 'upi-guard-2026-secret'
 
@@ -122,13 +124,6 @@ def add_payment():
             flash('❌ Invalid amount!', 'error')
             return redirect('/add_payment')
         
-        # Store payment details in session
-        session['pending_payment'] = {
-            'merchant': merchant,
-            'amount': amount,
-            'category': category
-        }
-        
         # AI Risk Analysis
         risk_score = 20
         if 'unknown' in merchant.lower() or 'test' in merchant.lower():
@@ -138,6 +133,14 @@ def add_payment():
         if category == 'Entertainment' and amount > 1000:
             risk_score += 25
         risk_score = min(risk_score, 95)
+        
+        # Store payment details AND risk_score in session
+        session['pending_payment'] = {
+            'merchant': merchant,
+            'amount': amount,
+            'category': category,
+            'risk_score': risk_score  # ✅ ADDED - store calculated risk
+        }
         
         # Determine if blocked
         blocked = risk_score > 70
@@ -170,14 +173,16 @@ def approve_payment():
     merchant = pending['merchant']
     amount = pending['amount']
     category = pending['category']
+    risk_score = pending.get('risk_score', 0)  # ✅ ADDED - get actual risk score
     
-    # NOW add the transaction
+    # NOW add the transaction with risk score and timestamp
     new_tx = {
         'merchant': merchant,
         'amount': amount,
         'category': category,
-        'risk': 0,
-        'blocked': False
+        'risk': risk_score,  # ✅ FIXED - use actual risk score instead of 0
+        'blocked': False,
+        'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # ✅ ADDED - timestamp
     }
     transactions.append(new_tx)
     
